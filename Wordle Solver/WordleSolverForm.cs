@@ -4,13 +4,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.Net;
+using System.Net.Http;
 
 namespace Wordle_Solver
 {
     public partial class WordleSolverForm : Form
     {
-        private HashSet<string> wordList;
+        private HashSet<string> wordList = new HashSet<string>();
 
         public WordleSolverForm()
         {
@@ -64,17 +64,30 @@ namespace Wordle_Solver
         {
             try
             {
-                using (WebClient webClient = new WebClient())
+                using (HttpClient httpClient = new HttpClient())
                 {
                     // Replace "YourWebsiteURL" with the actual URL of the "words.txt" file on your website
-                    webClient.DownloadFile("https://raw.githubusercontent.com/ZandervB/Wordle-Solver/master/Wordle%20Solver/words.txt", "words.txt");
-                }
-                MessageBox.Show("The 'words.txt' file has been successfully downloaded from the website. The program can now start.", "Download Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return true;
+                    HttpResponseMessage response = httpClient.GetAsync("https://raw.githubusercontent.com/ZandervB/Wordle-Solver/master/Wordle%20Solver/words.txt").Result;
 
+                    if (response.IsSuccessStatusCode)
+                    {
+                        byte[] content = response.Content.ReadAsByteArrayAsync().Result;
+                        System.IO.File.WriteAllBytes("words.txt", content);
+
+                        MessageBox.Show("The 'words.txt' file has been successfully downloaded from the website. The program can now start.", "Download Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Failed to download the 'words.txt' file from the website. Status code: {response.StatusCode}", "Download Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    }
+                }
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
+                // Display an error message if download fails
+                MessageBox.Show($"An error occurred while downloading the 'words.txt' file: {ex.Message}", "Download Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
