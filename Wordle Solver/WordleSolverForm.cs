@@ -9,7 +9,7 @@ namespace Wordle_Solver
 {
     public partial class WordleSolverForm : Form
     {
-        IReadOnlyList<string> wordList = System.IO.File.ReadAllLines("words.txt");
+        private HashSet<string> wordList = new HashSet<string>(System.IO.File.ReadAllLines("words.txt"));
 
         public WordleSolverForm()
         {
@@ -34,13 +34,8 @@ namespace Wordle_Solver
             outputText.Visible = false;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
 
-            
-        }
-
-        public List<string> findMatchingWords(IReadOnlyList<string> words, string green, string yellow, string grey)
+        public List<string> findMatchingWords(HashSet<string> words, string green, string yellow, string grey)
         {
             List<string> matchingWords = new List<string>();
             foreach (string word in words)
@@ -84,7 +79,20 @@ namespace Wordle_Solver
 
         public string GetColorText(string color)
         {
-            string result = "";
+            StringBuilder result = new StringBuilder();
+            if (color == "grey")
+            {
+                if (grey.Text.Any(c => !char.IsLetter(c)))
+                {
+                    MessageBox.Show("Invalid input in the grey textbox. Please enter only letters.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return "";
+                }
+                else
+                {
+                    return grey.Text.ToLower();
+                }
+            }
+            
             for (int i = 1; i <= 5; i++)
             {
                 TextBox? textBox = this.Controls.Find(color + i, true).FirstOrDefault() as TextBox;
@@ -92,20 +100,19 @@ namespace Wordle_Solver
                 // Check if the textbox is null or empty
                 if (textBox == null || string.IsNullOrEmpty(textBox.Text))
                 {
-                    result += "#"; // Add "#" to the result for an empty or null textbox
+                    result.Append("#"); // Add "#" to the result for an empty or null textbox
                 }
-                else if (textBox.Text.All(c => !Char.IsLetter(c)))
+                else if (textBox.Text.All(c => !char.IsLetter(c)))
                 {
                     MessageBox.Show($"Invalid input in {color} textbox {i}. Please enter only letters or leave the textbox empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return "#####"; // Return a placeholder value to indicate an error
                 }
                 else
                 {
-                    result += textBox.Text;
+                    result.Append(textBox.Text);
                 }
             }
-            result = result.ToLower();
-            return result;
+            return result.ToString().ToLower();
         }
 
 
@@ -114,14 +121,7 @@ namespace Wordle_Solver
         {
             string greenPositions = GetColorText("green");
             string yellowPositions = GetColorText("yellow");
-            
-            string greyPositions = grey.Text;
-            if (greyPositions.Any(c => !Char.IsLetter(c)))
-            {
-                MessageBox.Show("Invalid input in the grey textbox. Please enter only letters.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                greyPositions = "";
-            }
-            greyPositions = greyPositions.ToLower();
+            string greyPositions = GetColorText("grey");
 
             List<string> matchingWords = findMatchingWords(wordList, greenPositions, yellowPositions, greyPositions);
 
