@@ -82,48 +82,45 @@ namespace Wordle_Solver
 
 
 
-        public string getGreen()
+        public string GetColorText(string color)
         {
-            string green = "";
+            string result = "";
             for (int i = 1; i <= 5; i++)
             {
-                TextBox greenTextBox = this.Controls.Find("green" + i, true).FirstOrDefault() as TextBox;
-                if (!string.IsNullOrEmpty(greenTextBox.Text) && greenTextBox.Text.All(c => Char.IsLetter(c)))
+                TextBox? textBox = this.Controls.Find(color + i, true).FirstOrDefault() as TextBox;
+
+                // Check if the textbox is null or empty
+                if (textBox == null || string.IsNullOrEmpty(textBox.Text))
                 {
-                    green += greenTextBox.Text;
+                    result += "#"; // Add "#" to the result for an empty or null textbox
+                }
+                else if (textBox.Text.All(c => !Char.IsLetter(c)))
+                {
+                    MessageBox.Show($"Invalid input in {color} textbox {i}. Please enter only letters or leave the textbox empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return "#####"; // Return a placeholder value to indicate an error
                 }
                 else
                 {
-                    green += "#";
+                    result += textBox.Text;
                 }
             }
-            green = green.ToLower();
-            return green;
+            result = result.ToLower();
+            return result;
         }
-        public string getYellow()
-        {
-            string yellow = "";
-            for (int i = 1; i <= 5; i++)
-            {
-                TextBox yellowTextBox = this.Controls.Find("yellow" + i, true).FirstOrDefault() as TextBox;
-                if (!string.IsNullOrEmpty(yellowTextBox?.Text) && yellowTextBox.Text.All(c => Char.IsLetter(c)))
-                {
-                    yellow += yellowTextBox.Text;
-                }
-                else
-                {
-                    yellow += "#";
-                }
-            }
-            yellow = yellow.ToLower();
-            return yellow;
-        }
+
+
 
         private void btnFindWords_Click(object sender, EventArgs e)
         {
-            string greenPositions = getGreen();
-            string yellowPositions = getYellow();
+            string greenPositions = GetColorText("green");
+            string yellowPositions = GetColorText("yellow");
+            
             string greyPositions = grey.Text;
+            if (greyPositions.Any(c => !Char.IsLetter(c)))
+            {
+                MessageBox.Show("Invalid input in the grey textbox. Please enter only letters.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                greyPositions = "";
+            }
             greyPositions = greyPositions.ToLower();
 
             List<string> matchingWords = findMatchingWords(wordList, greenPositions, yellowPositions, greyPositions);
