@@ -16,8 +16,14 @@ namespace Wordle_Solver
         public WordleSolverForm()
         {
             InitializeComponent();
-            LoadWordListAsync(); // Load the word list asynchronously when the form is initialized
+            InitializeAsync(); // Load the word list asynchronously when the form is initialized
         }
+
+        private async void InitializeAsync()
+        {
+            await LoadWordListAsync();
+        }
+
 
         // Asynchronously load the word list from a file or download it from a website if not found
         private async Task LoadWordListAsync()
