@@ -4,31 +4,88 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Wordle_Solver
 {
     public partial class WordleSolverForm : Form
     {
-        private HashSet<string> wordList = new HashSet<string>(System.IO.File.ReadAllLines("words.txt"));
+        private HashSet<string> wordList;
 
         public WordleSolverForm()
         {
             InitializeComponent();
+            LoadWordList();
+        }
+
+        private void LoadWordList()
+        {
+            try
+            {
+                wordList = new HashSet<string>(System.IO.File.ReadAllLines("words.txt"));
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("The 'words.txt' file was not found. Attempting to download the file from the website...", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Attempt to download the file from your website
+                if (DownloadWordListFromWebsite())
+                {
+                    // If the download was successful, try loading the file again
+                    try
+                    {
+                        wordList = new HashSet<string>(System.IO.File.ReadAllLines("words.txt"));
+                    }
+                    catch (System.IO.FileNotFoundException)
+                    {
+                        MessageBox.Show("The 'words.txt' file could not be downloaded or found. Please make sure it exists and try again later.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Application.Exit();
+                    }
+                    catch (System.Exception ex)
+                    {
+                        MessageBox.Show($"An error occurred while loading the word list: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Application.Exit();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("The 'words.txt' file could not be downloaded. Please make sure your internet connection is active and try again later.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Application.Exit();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"An error occurred while loading the word list: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+        }
+
+        private bool DownloadWordListFromWebsite()
+        {
+            try
+            {
+                using (WebClient webClient = new WebClient())
+                {
+                    // Replace "YourWebsiteURL" with the actual URL of the "words.txt" file on your website
+                    webClient.DownloadFile("https://raw.githubusercontent.com/ZandervB/Wordle-Solver/master/Wordle%20Solver/words.txt", "words.txt");
+                }
+                MessageBox.Show("The 'words.txt' file has been successfully downloaded from the website. The program can now start.", "Download Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return true;
+
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            green1.Text = "";
-            green2.Text = "";
-            green3.Text = "";
-            green4.Text = "";
-            green5.Text = "";
-            yellow1.Text = "";
-            yellow2.Text = "";
-            yellow3.Text = "";
-            yellow4.Text = "";
-            yellow5.Text = "";
-            grey.Text = "";
+            foreach (TextBox textBox in this.Controls.OfType<TextBox>())
+            {
+                textBox.Text = "";
+            }
+
             outputText.Text = "";
             lCount.Text = "";
             outputText.Visible = false;
